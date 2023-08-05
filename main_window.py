@@ -27,7 +27,7 @@ layout = [
                 ],
                 [
                     sg.Button("Save Epithets"),
-                    sg.Button("Divide Into Sentences", key="-DIVIDE-"),
+                    # sg.Button("Divide Into Sentences", key="-DIVIDE-"),
                 ],
             ],
         )
@@ -62,9 +62,11 @@ while True:
         window.refresh()
     elif event == "Save Epithets":
         save_epithets()
-    elif event == "-DIVIDE-":
-        separate(get_final_text())
     elif event == sg.WIN_CLOSED:
         break
+    """
+    elif event == "-DIVIDE-":
+        separate(get_final_text())
+    """
 
 window.close()
