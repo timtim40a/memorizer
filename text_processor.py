@@ -12,6 +12,7 @@ def is_a_vowel(l) -> bool:
         or (l == "I" or l == "i")
         or (l == "E" or l == "e")
         or (l == "U" or l == "u")
+        or (l == "ʌ")
     )
 
 
@@ -34,12 +35,21 @@ def starts_with_a_vowel(word) -> bool:
             return is_a_vowel(pronunciation_string[2])
         except IndexError as index:
             print(f"No word found: {index}")
+            try:
+                sound_id = html.find('<span class="pron">')
+                html_cut = html[sound_id : sound_id + 35]
+                pronunciation_string = re.sub("<.*?>", "", html_cut)
+                return is_a_vowel(pronunciation_string[0])
+            except IndexError as index:
+                print(f"No word transcription found: {index}")
+            except Exception as e:
+                print(f"Other error occurred: {e}")
         except HTTPError as http_err:
             print(f"HTTP error occurred: {http_err}")
         except Exception as e:
             print(f"Other error occurred: {e}")
     else:
-        return is_a_vowel(l)
+        return is_a_vowel(word[f])
 
 
 def article_corrector(words) -> list:
