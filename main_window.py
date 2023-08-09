@@ -13,6 +13,7 @@ sg.theme("LightBrown4")
 mline = sg.Multiline(args.final_text, border_width=4, size=(45, 20), key="-OUTPUT-")
 
 layout = [
+    [sg.Text("generation : 0, epithets amount : ", key="-GEN-")],
     [mline],
     [sg.InputText("file name:", size=(45, 1), key="-IN-")],
     [
@@ -27,6 +28,7 @@ layout = [
                 ],
                 [
                     sg.Button("Save Epithets"),
+                    sg.Button("Shuffle 10x")
                     # sg.Button("Divide Into Sentences", key="-DIVIDE-"),
                 ],
             ],
@@ -37,6 +39,7 @@ layout = [
 # Create the window
 window = sg.Window("Demo", layout)
 current_text = ""
+
 hl = False
 # Create an event loop
 while True:
@@ -47,6 +50,16 @@ while True:
         filename = window["-IN-"]
     elif event == "Shuffle":
         window["-OUTPUT-"].update(get_final_text())
+        window["-GEN-"].update(
+            f"generation : {get_generation()}, epithets amount : {get_epithets_amount()}"
+        )
+    elif event == "Shuffle 10x":
+        for i in range(9):
+            get_final_text()
+        window["-OUTPUT-"].update(get_final_text())
+        window["-GEN-"].update(
+            f"generation : {get_generation()}, epithets amount : {get_epithets_amount()}"
+        )
     elif event == "View Original":
         window["-OUTPUT-"].update(get_raw_text())
     elif event == "-HL-" and not hl:

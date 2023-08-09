@@ -1,7 +1,8 @@
 from file_reader import raw_read
-from random import shuffle
+from random import shuffle, randint
 from urllib.request import urlopen
 from urllib.error import HTTPError
+from math import ceil
 import re
 
 
@@ -18,7 +19,9 @@ def is_a_vowel(l) -> bool:
 
 def starts_with_a_vowel(word) -> bool:
     f = 0
-    if word[0] == "/":
+    if word == "":
+        return False
+    elif word[0] == "/":
         f = 1
     l = word[f]  # l stands for letter
     if (l == "U" or l == "u") or (l == "h" or l == "H"):
@@ -62,6 +65,8 @@ def article_corrector(words) -> list:
 
 
 def memory_shuffle(words: list, epithets, places) -> str:
+    global generation
+    forget()
     shuffle(places)
     for i in range(len(places)):
         words[places[i]] = epithets[i]
@@ -72,7 +77,9 @@ def memory_shuffle(words: list, epithets, places) -> str:
             new_string.append(words[i])
     words = new_string.copy()
     # -------------------------------------------------------------------#
+    words = check_ands(words)
     words = article_corrector(words)
+    generation += 1
     return words
 
 
@@ -89,6 +96,7 @@ def join(given_list, separator) -> str:
 def make_up(text: str) -> str:
     text = text.replace("/", "")
     text = text.replace(" .", ". ")
+    text = text.replace("  ", " ")
     return text
 
 
@@ -96,6 +104,8 @@ words = []
 epithets = []
 epithets_places = []
 sentences = []
+ands_places = []
+generation = 0
 filename = ""
 
 for line in raw_read(filename):
@@ -106,6 +116,10 @@ for i in range(len(words)):
     if words[i].startswith("/"):
         epithets.append(words[i])
         epithets_places.append(i)
+
+for i in range(len(words)):
+    if words[i] == "and" and words[i - 1][0] == "/" and words[i + 1][0] == "/":
+        ands_places.append(i)
 
 
 def get_final_text() -> str:
@@ -127,18 +141,60 @@ def save_epithets():
     epithets_file = open("epithets.txt", "w")
     for i in epithets:
         epithets_file.write(i)
+    for i in epithets_places:
+        epithets_file.write(str(i))
     epithets_file.close()
 
 
 def separate(text: str) -> list:
     global sentences
-    length = len(text)
-    while length > 3:
+    sent_end = text.find(".")
+    while len(text) > sent_end + 3:
         sent_end = text.find(".")
         if text[sent_end + 1].isspace() and (
             text[sent_end + 2].isupper() or text[sent_end + 2].isnumeric()
         ):
             sentences.append(text[: sent_end + 1])
             text = text[sent_end + 1 :].strip()
-            length = len(text)
             print(text)
+
+
+def forget():
+    global epithets, epithets_places, ands_places, words
+    chance = randint(0, 10) + (generation / 10)
+    if chance > 7:
+        for j in range(ceil(chance / 10)):
+            i = randint(0, len(epithets) - 1)
+            pos = epithets_places[i]
+            epithets[i] = ""
+
+
+def check_ands(words: list) -> list:
+    global ands_places
+    for i in range(len(ands_places)):
+        check = words[ands_places[i]]
+        while check != "and":
+            for j in range(3):
+                if words[ands_places[i] + j] == "and":
+                    ands_places[i] += j
+                    check = words[ands_places[i]]
+                elif words[ands_places[i] - j] == "and":
+                    ands_places[i] -= j
+                    check = words[ands_places[i]]
+        if words[ands_places[i] + 1] == "" or words[ands_places[i] - 1] == "":
+            words[ands_places[i]] = ""
+        elif (
+            words[ands_places[i] + 1][0] == "/" and words[ands_places[i] - 1][0] == "/"
+        ):
+            words[ands_places[i]] = "and"
+        else:
+            words[ands_places[i]] = ""
+    return words
+
+
+def get_generation():
+    return generation
+
+
+def get_epithets_amount():
+    return len(epithets) - epithets.count("")
