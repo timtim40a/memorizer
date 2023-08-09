@@ -3,14 +3,16 @@ from argparse import ArgumentParser
 from time import sleep
 from text_processor import *
 
+"""
 parser = ArgumentParser()
 parser.add_argument("final_text", type=str)
 args = parser.parse_args()
+"""
 
 filename = ""
 
 sg.theme("LightBrown4")
-mline = sg.Multiline(args.final_text, border_width=4, size=(45, 20), key="-OUTPUT-")
+mline = sg.Multiline(get_final_text(), border_width=4, size=(45, 20), key="-OUTPUT-")
 
 layout = [
     [sg.Text("generation : 0, epithets amount : ", key="-GEN-")],
@@ -37,7 +39,7 @@ layout = [
 ]
 
 # Create the window
-window = sg.Window("Demo", layout)
+window = sg.Window("Memorizer v.1.0.2", layout)
 current_text = ""
 
 hl = False
