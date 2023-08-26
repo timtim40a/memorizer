@@ -17,15 +17,13 @@ def is_a_vowel(l) -> bool:
     )
 
 
-def starts_with_a_vowel(word) -> bool:
-    f = 0
+def starts_with_a_vowel(word: str) -> bool:
+    word = word.strip("/")
     if word == "":
         return False
-    elif word[0] == "/":
-        f = 1
-    l = word[f]  # l stands for letter
+    l = word[0]  # l stands for letter
     if (l == "U" or l == "u") or (l == "h" or l == "H"):
-        url = "https://www.dictionary.com/browse/" + word[f:]
+        url = "https://www.dictionary.com/browse/" + word
         page = urlopen(url)
         html_bytes = page.read()
         html = html_bytes.decode("utf-8")
@@ -52,14 +50,17 @@ def starts_with_a_vowel(word) -> bool:
         except Exception as e:
             print(f"Other error occurred: {e}")
     else:
-        return is_a_vowel(word[f])
+        return is_a_vowel(word[0])
 
 
 def article_corrector(words) -> list:
     for i in range(len(words)):
-        if words[i] == "a" and starts_with_a_vowel(words[i + 1]):
+        j = 1
+        while (i + j) < len(words) and words[i + j] == "":
+            j += 1
+        if words[i] == "a" and starts_with_a_vowel(words[i + j]):
             words[i] = "an"
-        elif words[i] == "an" and not starts_with_a_vowel(words[i + 1]):
+        elif words[i] == "an" and not starts_with_a_vowel(words[i + j]):
             words[i] = "a"
     return words
 
@@ -67,6 +68,7 @@ def article_corrector(words) -> list:
 def memory_shuffle(words: list, epithets, places) -> str:
     global generation
     forget()
+    explain()
     shuffle(places)
     for i in range(len(places)):
         words[places[i]] = epithets[i]
@@ -96,6 +98,7 @@ def join(given_list, separator) -> str:
 def make_up(text: str) -> str:
     text = text.replace("/", "")
     text = text.replace(" .", ". ")
+    text = text.replace("   ", " ")
     text = text.replace("  ", " ")
     return text
 
@@ -165,7 +168,6 @@ def forget():
     if chance > 7:
         for j in range(ceil(chance / 10)):
             i = randint(0, len(epithets) - 1)
-            pos = epithets_places[i]
             epithets[i] = ""
 
 
@@ -198,3 +200,44 @@ def get_generation():
 
 def get_epithets_amount():
     return len(epithets) - epithets.count("")
+
+
+def explain():
+    global epithets, epithets_places, ands_places, words
+    chance = randint(0, 100) + (generation / 10)
+    word = ""
+    if chance > 95:
+        while len(word) < 7 or (" " in word):
+            i = randint(0, len(words) - 1)
+            word: str = words[i]
+        try:
+            url = "https://www.dictionary.com/browse/" + word.lstrip("/")
+            page = urlopen(url)
+            html_bytes = page.read()
+            html = html_bytes.decode("utf-8")
+            part_of_speech_id = html.find('<span class="luna-pos">')
+            part_of_speech_end_id = html.find('<div class="_bzA3f8_vqmJSIKsgOar">')
+            html_cut = html[part_of_speech_id:part_of_speech_end_id]
+            html_cut = re.sub("<.*?>", "", html_cut)
+            first_space = html_cut.find(" ")
+            if first_space != -1:
+                part_of_speech: str = html_cut[: first_space + 1]
+            else:
+                part_of_speech: str = html_cut
+            result = (
+                "...I can't remember the word, but it is a "
+                + part_of_speech
+                + " that is defined as "
+            )
+            result = article_corrector(result.split())
+            result = " ".join(result) + " "
+            def_id = html.find(
+                '<div class="ESah86zaufmd2_YPdZtq" data-type="word-definition-content">'
+            )
+            def_end_id = html.find('<span class="luna-example italic">')
+            html_cut = html[def_id:def_end_id]
+            definition = re.sub("<.*?>", "", html_cut)
+            result += definition
+            words[i] = result
+        except HTTPError as err:
+            pass
